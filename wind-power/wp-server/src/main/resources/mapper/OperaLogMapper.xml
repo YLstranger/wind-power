@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wp.mapper.OperaLogMapper">
+
+    <insert id="insert">
+        insert into sys_operation_log
+        (title, content, method, request_method,
+         opera_user_id, request_url, ip, ip_location,
+         request_param, response_result, status, error_msg, opera_time, take_time)
+        values (#{title}, #{content}, #{method}, #{requestMethod}, #{operaUserId},
+                #{requestUrl}, #{ip}, #{ipLocation},#{requestParam},
+                #{responseResult}, #{status}, #{errorMsg}, #{operaTime}, #{takeTime})
+    </insert>
+</mapper>

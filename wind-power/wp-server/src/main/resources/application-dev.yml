@@ -1,0 +1,14 @@
+wp:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    host: localhost
+    port: 3306
+    database: wind_power
+    username: *
+    password: *
+  alioss:
+    endpoint: *
+    access-key-id: *
+    access-key-secret: *
+    bucket-name: *
+
