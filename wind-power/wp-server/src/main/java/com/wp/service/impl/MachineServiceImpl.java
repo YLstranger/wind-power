@@ -37,7 +37,7 @@ public class MachineServiceImpl implements MachineService {
 
     private static final int initialNumber = 101;
     private static final String PYTHONINTERPRETER = "D:\\python\\python.exe";
-    private static final String SCRIPTPATH = "E:\\wind power project\\information\\WPF\\WPF\\Predict.py";
+    private static final String SCRIPTPATH = "D:\\Project\\project\\wind-power\\information\\WPF\\WPF\\Predict.py";
 
     @Autowired
     private MachineMapper machineMapper;
@@ -266,29 +266,7 @@ public class MachineServiceImpl implements MachineService {
 
         //调用脚本生成预测之后的数据
         getDataByScript(modelName);
-
-        //从excel表格中读取预测之后的数据
-        //begin:end+timeInterval
-        //end:end+timeInterval+end-begin
-        //这里先进行判断，比如时间跨度太长，数据库没有数据，则开始时间和结束时间从数据库中拿
-//        String min = predictDataVO.getOriginalData().get(0).getRecordTime().replace(" ","T");
-//        String max = predictDataVO.getOriginalData().get(predictDataVO.getOriginalData().size() - 1).getRecordTime().replace(" ","T");
-//        LocalDateTime minTime = LocalDateTime.parse(min);
-//        LocalDateTime maxTime = LocalDateTime.parse(max);
-//        begin = begin.isBefore(minTime) ? minTime : begin;
-//        end = end.isAfter(maxTime) ? maxTime : end;
-
-//        // 计算预测数据图的开始时间和结束时间
-//        //开始时间
-//        // 计算 end - begin
-//        Duration durationBetween = Duration.between(begin, end);
-//        begin = end.plusHours(timeInterval);
-//        // 计算 end + interval
-//        LocalDateTime endPlusInterval = end.plusHours(timeInterval);
-//        // 计算 end + interval + (end - begin)
-//        end = endPlusInterval.plus(durationBetween);
-//        log.info("开始时间和结束时间为：{}，{}", begin, end);
-        String outFilePath = "E:\\wind power project\\information\\WPF\\WPF\\out\\original data_pred.xlsx";
+        String outFilePath = "D:\\Project\\project\\wind-power\\information\\WPF\\WPF\\out\\original data_pred.xlsx";
         try {
             FileInputStream fis = new FileInputStream(outFilePath);
             //创建excel对象

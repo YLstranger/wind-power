@@ -140,7 +140,6 @@ public class UserController {
         String key = CODE_KEY_PREFIX +email;
         // 检查是否在冷却期内
         if (redisTemplate.hasKey(key)) {
-            long remainSeconds = redisTemplate.getExpire(key, TimeUnit.SECONDS);
             throw new RequestLimitException(MessageConstant.REQUEST_LIMIT_EXCEEDED);
         }
         // 生成验证码

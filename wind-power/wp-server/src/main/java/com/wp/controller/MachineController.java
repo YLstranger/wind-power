@@ -95,7 +95,6 @@ public class MachineController {
     @GetMapping("/getMachineData")
     @ApiOperation("根据风机id获取风机数据")
     @MyLog(title = "风机模块", content = "获取风机数据操作")
-    // TODO 根据前端进行修改
     public Result getById(MachineDataDTO machineDataDTO){
         log.info("获取风机数据相关参数为：{}",machineDataDTO.toString());
         PredictDataVO predictDataVO=machineService.getById(machineDataDTO);

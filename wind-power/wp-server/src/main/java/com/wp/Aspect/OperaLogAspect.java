@@ -45,7 +45,9 @@ public class OperaLogAspect {
      * 设置操作日志切入点，这里介绍两种方式：
      * 1、基于注解切入（也就是打了自定义注解的方法才会切入）
      *
-     * @Pointcut("@annotation(org.wujiangbo.annotation.MyLog)") 2、基于包扫描切入
+     * @Pointcut("@annotation(org.wujiangbo.annotation.MyLog)")
+     *
+     * 2、基于包扫描切入
      * @Pointcut("execution(public * com.scour.controller..*.*(..))")
      */
     @Pointcut("@annotation(com.wp.annotation.MyLog)")//在注解的位置切入代码
@@ -119,7 +121,6 @@ public class OperaLogAspect {
                 operalog.setOperaUserId(-1L);
             }
             operalog.setIp(getIp(request)); // IP地址
-            // TODO 这里需要根据IP地址查询归属地
             operalog.setIpLocation("湖南衡阳"); // IP归属地（真实环境中可以调用第三方API根据IP地址，查询归属地）
             operalog.setRequestUrl(request.getRequestURI()); // 请求URI
             operalog.setOperaTime(LocalDateTime.now()); // 时间
