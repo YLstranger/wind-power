@@ -4,6 +4,7 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+// Component注解和ConfigurationProperties注解缺一不可
 @Component
 @ConfigurationProperties(prefix = "wp.jwt")
 @Data

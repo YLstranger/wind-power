@@ -4,11 +4,11 @@ wp:
     host: localhost
     port: 3306
     database: wind_power
-    username: *
-    password: *
+    username: scour
+    password: 123456
   alioss:
-    endpoint: *
-    access-key-id: *
-    access-key-secret: *
-    bucket-name: *
+    endpoint: http://oss-cn-beijing.aliyuncs.com
+    access-key-id: scour
+    access-key-secret: scour
+    bucket-name: scour
 

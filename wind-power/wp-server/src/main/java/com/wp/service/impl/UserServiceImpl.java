@@ -9,7 +9,7 @@ import com.wp.dto.UserLoginDTO;
 import com.wp.dto.UserRegisterDTO;
 import com.wp.entity.User;
 import com.wp.entity.UserRole;
-import com.wp.exception.AccountAlreadyExist;
+import com.wp.exception.AccountAlreadyExistException;
 import com.wp.exception.AccountNotFoundException;
 import com.wp.exception.PasswordErrorException;
 import com.wp.mapper.UserMapper;
@@ -170,7 +170,7 @@ public class UserServiceImpl implements UserService {
         //判断用户名是否已存在，用户名存在则抛出异常，该用户已经存在
         User user = userMapper.getByUsername(username);
         if (user != null) {
-            throw new AccountAlreadyExist(MessageConstant.ACCOUNT_ALREADY_EXIST);
+            throw new AccountAlreadyExistException(MessageConstant.ACCOUNT_ALREADY_EXIST);
         }
         password = DigestUtils.md5DigestAsHex(password.getBytes());
         //向用户表插入数据，并返回用户ID
