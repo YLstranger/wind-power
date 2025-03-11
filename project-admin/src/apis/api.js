@@ -75,11 +75,12 @@ export default {
 	},
 
 	//获取验证码
-	getCodeApi: () => {
+	getCodeApi: (data) => {
 		return request({
 			url: '/user/code',
 			method: 'get',
 			mock: false,
+			data
 		})
 	},
 
