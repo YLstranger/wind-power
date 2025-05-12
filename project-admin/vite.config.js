@@ -27,7 +27,7 @@ export default defineConfig({
 		proxy: {
 			// 代理所有以 '/api' 开头的请求到后端服务器
 			'/api': {
-				target: 'http://localhost:8080', // 后端 API 服务地址
+				target: 'http://localhost:9093', // 后端 API 服务地址
 				changeOrigin: true,              // 是否改变源头，设置为 true 可以避免一些跨域问题
 			},
 		},
