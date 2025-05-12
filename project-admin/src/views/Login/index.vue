@@ -1,243 +1,287 @@
 <script setup>
-import { onMounted, ref, onBeforeUnmount } from "vue";
-import { useRouter } from "vue-router";
-import { useMenuStore } from "@/stores/menu";
-import { useUserStore } from "@/stores/user";
+import {onMounted, ref, onBeforeUnmount} from "vue";
+import {useRouter} from "vue-router";
+import {useMenuStore} from "@/stores/menu";
+import {useUserStore} from "@/stores/user";
 import 'element-plus/theme-chalk/el-message.css';
-import { jwtDecode } from "jwt-decode";
+import {jwtDecode} from "jwt-decode";
 import api from "@/apis/api";
 
-const menuStore = useMenuStore();
-const userStore = useUserStore();
-const loginForm = ref({
+const menuStore = useMenuStore()
+const userStore = useUserStore()
+let loginForm = ref({
   username: "",
   password: "",
   email: "",
   inputCode: ""
 });
-const initialCode = ref("");
-const router = useRouter();
-const COUNTDOWN_KEY = 'verify_code_endtime';
-const DURATION = 60;
+let initialCode = ref("")
+const router = useRouter()
+const COUNTDOWN_KEY = 'verify_code_endtime'; // 本地存储键名
+const DURATION = 60; // 总倒计时秒数
 
-// 动画控制
-const codeAnimation = ref('');
+// 动态添加动画类
+let codeAnimation = ref('')
+
 const countdown = ref(0);
 const isCountdown = ref(false);
 let timer = null;
 
+//获取验证码功能开发
+// 1. 页面加载时恢复倒计时状态
 onMounted(() => {
   const savedEndTime = localStorage.getItem(COUNTDOWN_KEY);
   if (savedEndTime) {
     const remaining = Math.floor((Number(savedEndTime) - Date.now()) / 1000);
-    if (remaining > 0) startCountdown(remaining);
+    if (remaining > 0) startCountdown(remaining); // 存在未完成的倒计时则恢复
   }
 });
 
+// 2. 组件卸载时清除定时器
 onBeforeUnmount(() => {
   if (timer) clearInterval(timer);
 });
 
+// 3. 启动倒计时（核心逻辑）
 const startCountdown = (initial = DURATION) => {
   isCountdown.value = true;
   countdown.value = initial;
-  const endTime = Date.now() + initial * 1000;
+  const endTime = Date.now() + initial * 1000; // 计算倒计时结束时间戳
 
+  // 持久化存储结束时间
   localStorage.setItem(COUNTDOWN_KEY, endTime.toString());
 
   timer = setInterval(() => {
     const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+
     if (remaining <= 0) {
       clearInterval(timer);
       isCountdown.value = false;
-      localStorage.removeItem(COUNTDOWN_KEY);
+      localStorage.removeItem(COUNTDOWN_KEY); // 倒计时结束清除存储
     } else {
-      countdown.value = remaining;
+      countdown.value = remaining; // 更新剩余秒数
     }
   }, 1000);
 };
 
+// 4. 获取验证码逻辑
 const getInitialCode = async () => {
-  if (!loginForm.value.email) {
-    ElMessage.warning("请输入邮箱地址");
-    return;
-  }
   if (isCountdown.value) return;
 
   try {
-    const res = await api.getCodeApi({ email: loginForm.value.email });
-    initialCode.value = res.data.code; // 假设后端返回{ code: "1234" }
-
-    // 触发动画
+    initialCode.value = await api.getCodeApi({ email: loginForm.value.email });
+    // 添加动画类来触发动画
     codeAnimation.value = 'fade-in';
-    setTimeout(() => codeAnimation.value = '', 1000);
-
-    startCountdown();
-    ElMessage.success("验证码已发送");
+    // 在动画结束后移除动画类
+    setTimeout(() => {
+      codeAnimation.value = '';
+    }, 1000); // 动画持续时间为 1 秒
+    startCountdown(); // 启动持久化倒计时
   } catch (error) {
-    ElMessage.error("验证码发送失败");
-    localStorage.removeItem(COUNTDOWN_KEY);
+    localStorage.removeItem(COUNTDOWN_KEY); // 失败时清除存储
     isCountdown.value = false;
   }
 };
 
+//进行登录并且将token存储在localstorage中
 const login = async () => {
-  if (!loginForm.value.username || !loginForm.value.password) {
-    ElMessage.error("账号或密码不能为空");
-    return;
+  if (loginForm.value.username.length == 0 || loginForm.value.password.length == 0) {
+    ElMessage.error("账号或密码不能为空")
+    return
   }
-  if (!loginForm.value.inputCode) {
-    ElMessage.error("请输入验证码");
-    return;
-  }
-
-  try {
-    await userStore.doLogin(loginForm.value);
-    const token = localStorage.getItem('token');
-    const userType = jwtDecode(token).userType;
-    menuStore.setMenu(userType);
-    router.push('/');
-  } finally {
-    loginForm.value.password = "";
-    loginForm.value.inputCode = "";
-    initialCode.value = "";
-  }
-};
+  //请求登录接口拿到token
+  await userStore.doLogin(loginForm.value).finally(() => {
+    loginForm.value = {}
+    initialCode.value = ""
+  })
+  // console.log("我是token" + userStore.token)
+  let token = localStorage.getItem('token')
+  let userType = jwtDecode(token).userType;
+  // 打印出解析后用户类型 0：管理员 1：普通用户
+  // console.log("用户类型为：", userType);
+  //渲染左侧菜单数据
+  menuStore.setMenu(userType)
+  router.push('/')
+}
 
 const register = () => {
-  router.push('/register');
-};
+  console.log(router)
+  router.push('/register')
+}
+
 </script>
 
 <template>
   <el-form :model="loginForm" class="login-container">
     <h3>系统登录</h3>
     <el-form-item>
-      <el-input v-model="loginForm.username" placeholder="请输入账号"/>
+      <el-input type="input" placeholder="请输入账号" v-model="loginForm.username">
+      </el-input>
     </el-form-item>
     <el-form-item>
-      <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" show-password/>
+      <el-input type="password" placeholder="请输入密码" v-model="loginForm.password">
+      </el-input>
     </el-form-item>
     <el-form-item>
-      <el-input v-model="loginForm.email" placeholder="请输入邮箱" type="email"/>
+      <el-input type="input" placeholder="请输入邮箱" v-model="loginForm.email">
+      </el-input>
     </el-form-item>
     <el-form-item>
-      <div class="code-group">
-        <el-input v-model="loginForm.inputCode" placeholder="请输入验证码"/>
-        <div class="code-wrapper">
-          <div
-              class="code-trigger"
-              :class="{ disabled: isCountdown }"
-              @click="getInitialCode"
-          >
-            {{ countdown > 0 ? `${countdown}秒后重试` : '获取验证码' }}
-          </div>
-          <transition name="fade">
-            <div class="code-display" :class="codeAnimation">
-              {{ initialCode || '等待验证码...' }}
-            </div>
-          </transition>
-        </div>
+      <el-input type="input" placeholder="请输入验证码" v-model="loginForm.inputCode">
+      </el-input>
+    </el-form-item>
+    <div class="codeContainer">
+      <!-- 模板部分 -->
+      <div
+          class="text"
+          @click="getInitialCode"
+          :class="{ 'disabled': isCountdown }"
+          :disabled="isCountdown"
+      >
+        {{ countdown > 0 ? `${countdown}秒后重试` : '点击获取验证码' }}
       </div>
+      <!-- 动态绑定 class -->
+      <div class="code" :class="codeAnimation">{{ initialCode }}</div>
+    </div>
+    <el-form-item>
+      <el-button type="primary" class="login-btn" @click="login"> 登录</el-button>
     </el-form-item>
     <el-form-item>
-      <el-button type="primary" class="login-btn" @click="login">登录</el-button>
-    </el-form-item>
-    <el-form-item>
-      <el-button type="text" class="register-btn" @click="register">立即注册</el-button>
+      <div class="register-btn">
+        <el-button type="primary" :text="true" class="no-hover" @click="register"> 注册</el-button>
+      </div>
     </el-form-item>
   </el-form>
 </template>
 
 <style lang="scss" scoped>
 .login-container {
-  width: 380px;
-  margin: 100px auto;
-  padding: 30px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  width: 300px;
+  background-color: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 15px;
+  padding: 35px 35px 15px 35px;
+  box-shadow: 0 0 25px #cacaca;
+  margin: 180px auto;
 
-  h3 {
-    text-align: center;
-    margin-bottom: 30px;
-    color: #2c3e50;
-    font-size: 24px;
-  }
+  .codeContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 5px auto 20px;
 
-  .code-group {
-    position: relative;
-    width: 100%;
-
-    .code-wrapper {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
+    .text {
+      line-height: 1.6;
+      letter-spacing: 0.05em;
+      color: #333;
+      font-size: 12px;
+      width: 30%;
+      height: 40%;
+      margin: 5px 5px 20px 0px;
+      text-align: center;
     }
 
-    .code-trigger {
-      flex: 1;
-      height: 40px;
-      line-height: 40px;
-      text-align: center;
-      background: #409EFF;
-      color: white;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.3s;
-
-      &:hover {
-        background: #66b1ff;
-      }
-
-      &.disabled {
-        background: #c0c4cc;
-        cursor: not-allowed;
-      }
+    .disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
     }
 
-    .code-display {
-      flex: 1;
+    .code {
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-shadow: #f4f4f4;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      letter-spacing: 0.1em;
+      color: #333;
+      background-color: #f4f4f4;
+      font-size: 20px;
+      width: 180px;
       height: 40px;
-      line-height: 40px;
+      margin: 5px 0px 20px 0px;
       text-align: center;
-      background: #f0f9ff;
-      border: 1px solid #409EFF;
-      border-radius: 6px;
-      font-weight: bold;
-      color: #409EFF;
-      letter-spacing: 2px;
+      line-height: 40px;
 
       &.fade-in {
-        animation: fadeIn 0.8s ease-out;
+        animation: fadeIn 1s ease-out;
       }
     }
   }
+
+  h3 {
+    font-weight: 700;
+    font-size: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--el-color-primary)
+  }
+
 
   .login-btn {
     width: 100%;
-    height: 45px;
-    font-size: 16px;
   }
 
-  .register-btn {
-    width: 100%;
-    text-align: center;
-    color: #409EFF;
+  :deep(.register-btn) {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+
+    .no-hover {
+      &:hover {
+        color: #409EFF;
+        background-color: #fff;
+        border-color: #409EFF
+      }
+
+      padding: 0px;
+    }
   }
 
   @keyframes fadeIn {
     0% {
       opacity: 0;
-      transform: translateY(-10px);
+      transform: scale(0.9) rotate(0deg);
+      background-color: #f4f4f4;
+      color: #333;
     }
+
+    25% {
+      opacity: 0.5;
+      transform: scale(1.1) rotate(5deg);
+      background-color: #f0f0f0;
+      color: #409EFF;
+      /* 文字颜色渐变 */
+    }
+
     50% {
-      opacity: 1;
-      transform: translateY(0);
+      opacity: 0.7;
+      transform: scale(1.2) rotate(-5deg);
+      /* 轻微旋转 */
+      background-color: #e6f7ff;
+      /* 更换背景颜色 */
+      color: #409EFF;
+      /* 文字颜色渐变 */
     }
+
+    75% {
+      opacity: 0.9;
+      transform: scale(1.1) rotate(5deg);
+      /* 再次旋转 */
+      background-color: #e0f7ff;
+      color: #409EFF;
+    }
+
     100% {
       opacity: 1;
+      transform: scale(1) rotate(0deg);
+      /* 还原旋转 */
+      background-color: #f4f4f4;
+      /* 恢复背景颜色 */
+      color: #333;
+      /* 恢复文字颜色 */
     }
   }
+
 }
 </style>
